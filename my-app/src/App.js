@@ -32,8 +32,7 @@ function App() {
           <Route path="/login" element={<LoginForm isVisible={true} onClose={closePopup} />} />
           <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
-      </BrowserRouter>
-      <Footer />
+      </BrowserRouter>   
     </div>
   );
 }
