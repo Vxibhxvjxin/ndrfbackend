@@ -6,8 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Footer from "./Components/Common/Footer";
 import AboutPage from "./Pages/AboutPage";
 import HomePage from "./Pages/HomePage";
-import LoginForm from "./Components/Common/LoginForm"; // Import the LoginForm component
-import Dashboard from "./Components/Common/dashboard"; // Import the Dashboard component
+import LoginForm from "./Components/Common/LoginForm";
+import Dashboard from "./Components/Common/dashboard";
 
 function App() {
   const [isPopupVisible, setIsPopupVisible] = useState(false);
@@ -29,8 +29,8 @@ function App() {
             element={<HomePage triggerPopup={triggerPopup} isPopupVisible={isPopupVisible} closePopup={closePopup} />} 
           />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/login" element={<LoginForm isVisible={true} onClose={closePopup} />} /> {/* Update the onClose handler */}
-          <Route path="/dashboard" element={<dashboard />} /> {/* Add this route */}
+          <Route path="/login" element={<LoginForm isVisible={true} onClose={closePopup} />} />
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </BrowserRouter>
       <Footer />
