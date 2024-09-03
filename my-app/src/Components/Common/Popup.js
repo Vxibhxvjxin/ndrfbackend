@@ -104,7 +104,6 @@ const Popup = () => {
     <>
       {isVisible && (
         <div id="grievance-popup" className="popup-overlay">
-          {" "}
           <div className="popup-container">
             <button className="close-btn" onClick={() => setIsVisible(false)}>
               X
