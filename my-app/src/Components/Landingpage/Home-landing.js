@@ -1,25 +1,30 @@
-import React from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate from react-router-dom
+// Home.js
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "./Home-navbar";
 import Popup from "../Common/Popup";
 import BannerBackground from "../../Assets/home-banner-background.png";
 import BannerImage from "../../Assets/home-banner-image.png";
 import { FiArrowRight } from "react-icons/fi";
 
-const Home = ({ triggerPopup }) => {
-  const navigate = useNavigate(); // Initialize useNavigate hook
+const Home = ({ triggerPopup, isPopupVisible, closePopup }) => {
+  const navigate = useNavigate();
 
   const handleButtonClick = () => {
-    navigate('/login'); // Navigate to the /login route
+    navigate('/login');
   };
+
+  useEffect(() => {
+    triggerPopup(); // Trigger popup only once on component mount
+  }, [triggerPopup]);
 
   return (
     <div className="home-container" id="home">
       <Navbar triggerPopup={triggerPopup} />
-      <Popup />
+      {isPopupVisible && <Popup />} {/* Conditionally render Popup */}
       <div className="home-banner-container">
         <div className="home-bannerImage-container">
-          <img src={BannerBackground} alt="" />
+          <img src={BannerBackground} alt="Banner Background" />
         </div>
 
         <div>
@@ -33,13 +38,13 @@ const Home = ({ triggerPopup }) => {
             ensures efficient coordination, enhancing the ability to save lives
             and mitigate damage.
           </p>
-          <button className="secondary-button" onClick={handleButtonClick}> {/* Add onClick handler */}
+          <button className="secondary-button" onClick={handleButtonClick}>
             AI Dashboard <FiArrowRight />{" "}
           </button>
         </div>
 
         <div className="home-image-section">
-          <img src={BannerImage} alt="" />
+          <img src={BannerImage} alt="Banner Image" />
         </div>
       </div>
     </div>
