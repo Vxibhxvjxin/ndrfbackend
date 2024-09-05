@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
@@ -94,7 +93,7 @@ const LoginForm = ({ isVisible, onClose }) => {
       {isVisible && isLoginVisible && (
         <div className={`login-modal ${isVisible ? "show" : ""}`}>
           <div className="login-content">
-            <button onClick={handleClose} id="close-button"> {/* Update the close button handler */}
+            <button onClick={handleClose} id="close-button">
               X
             </button>
             <h1>Login</h1>
