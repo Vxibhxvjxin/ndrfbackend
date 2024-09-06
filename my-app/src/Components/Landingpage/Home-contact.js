@@ -1,45 +1,161 @@
-import React, { useState } from "react";
-import axios from "axios"; // Ensure you have axios installed for HTTP requests
+const express = require('express');
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const cors = require('cors');
 
-const Contact = () => {
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
+const app = express();
+app.use(express.json());
+app.use(cors());
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    try {
-      // Send the email to the server
-      await axios.post("/api/subscribe", { email });
+const mongoURI = "mongodb+srv://eklavyabro:rtdiasndrf@ndrf.avscv.mongodb.net/agency?retryWrites=true&w=majority"; // Ensure 'agency' is lowercase
 
-      // Show success message
-      setMessage("Subscription successful!");
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB connected'))
+  .catch(err => console.log('MongoDB connection error:', err));
 
-      // Clear the email input
-      setEmail("");
-    } catch (error) {
-      console.error("Error subscribing email:", error);
-      setMessage("Subscription failed. Please try again.");
+// Define schemas for Employee, Grievance, and Subscription
+const EmployeeSchema = new mongoose.Schema({
+  agencyName: { type: String, required: true },
+  agencyId: { type: String, required: true },
+  pincode: { type: String, required: true },
+  email: { type: String, required: true },
+  employeeName: { type: String, required: true },
+  employeeId: { type: String, required: true },
+  position: { type: String, required: true },
+  phone: { type: String, required: true },
+  password: { type: String, required: true }
+});
+
+const GrievanceSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  contactNumber: { type: String, required: true },
+  address: { type: String, required: true },
+  pincode: { type: String, required: true },
+  disasterType: { type: String, required: true },
+  assistanceRequired: { type: [String], required: true },
+  description: { type: String, required: true },
+  peopleCount: { type: Number, required: true },
+  urgencyLevel: { type: String, required: true }
+});
+
+const SubscriptionSchema = new mongoose.Schema({
+  email: { type: String, required: true }
+});
+
+const Employee = mongoose.model('Employee', EmployeeSchema, 'employee'); // Ensure 'employee' is singular
+const Employees = mongoose.model('Employees', EmployeeSchema, 'employees'); // Collection 'employees'
+const Grievance = mongoose.model('Grievance', GrievanceSchema, 'report'); // Grievance collection 'report'
+const Subscription = mongoose.model('Subscription', SubscriptionSchema, 'users'); // Subscription collection 'users'
+
+// Register route
+app.post('/register', async (req, res) => {
+  const { agencyName, agencyId, pincode, email, employeeName, employeeId, position, phone, regPassword } = req.body;
+
+  try {
+    const existingEmployee = await Employee.findOne({ employeeName });
+    if (existingEmployee) return res.status(400).json({ msg: 'Employee already exists' });
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(regPassword, salt);
+
+    const newEmployee = new Employee({
+      agencyName,
+      agencyId,
+      pincode,
+      email,
+      employeeName,
+      employeeId,
+      position,
+      phone,
+      password: hashedPassword
+    });
+
+    const newEmployeeInEmployees = new Employees({
+      agencyName,
+      agencyId,
+      pincode,
+      email,
+      employeeName,
+      employeeId,
+      position,
+      phone,
+      password: hashedPassword
+    });
+
+    await newEmployee.save();
+    await newEmployeeInEmployees.save();
+    res.json({ msg: 'Registration successful' });
+  } catch (error) {
+    res.status(500).json({ msg: 'Registration failed', error: error.message });
+  }
+});
+
+// Login route
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const employee = await Employee.findOne({ employeeName: username });
+    if (!employee) return res.status(400).json({ msg: 'Employee does not exist' });
+
+    const isMatch = await bcrypt.compare(password, employee.password);
+    if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
+
+    res.json({ msg: 'Login successful' });
+  } catch (error) {
+    res.status(500).json({ msg: 'Login failed', error: error.message });
+  }
+});
+
+// Submit grievance route
+app.post('/submit-grievance', async (req, res) => {
+  const { name, contactNumber, address, pincode, disasterType, assistanceRequired, description, peopleCount, urgencyLevel } = req.body;
+
+  try {
+    const newGrievance = new Grievance({
+      name,
+      contactNumber,
+      address,
+      pincode,
+      disasterType,
+      assistanceRequired,
+      description,
+      peopleCount,
+      urgencyLevel
+    });
+
+    await newGrievance.save();
+    res.json({ msg: 'Grievance reported successfully' });
+  } catch (error) {
+    res.status(500).json({ msg: 'Grievance submission failed', error: error.message });
+  }
+});
+
+// Subscribe route
+app.post('/subscribe', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    if (!email) {
+      return res.status(400).json({ msg: 'Email is required' });
     }
-  };
 
-  return (
-    <div id="contact-section" className="contact-page-wrapper">
-      <h1 className="primary-heading">Subscribe to our Newsletter</h1>
-      <h1 className="primary-heading">Get regular updates!</h1>
-      <form className="contact-form-container" onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="yourmail@gmail.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <button type="submit" className="secondary-button">Submit</button>
-      </form>
-      {message && <div className="popup-message">{message}</div>}
-    </div>
-  );
-};
+    // Check if email is valid
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ msg: 'Invalid email format' });
+    }
 
-export default Contact;
+    const newSubscription = new Subscription({ email });
+    await newSubscription.save();
+    res.json({ msg: 'Subscription successful!' });
+  } catch (error) {
+    console.error('Subscription error:', error); // Detailed error logging
+    res.status(500).json({ msg: 'Subscription failed', error: error.message });
+  }
+});
+
+// Listen on port 5000
+app.listen(5000, () => {
+  console.log('Server started on port 5000');
+});
